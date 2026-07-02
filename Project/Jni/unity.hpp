@@ -1,88 +1,29 @@
-#pragma once
-#include "il2cpp.h"
-#include "utils.h"
-#include <cstdio>
-#include <vector>
-
 namespace Unity {
 
-    inline bool ResolveEngineAPI() {
-        if (!IL2CPP::API::ResolveICall) return false;
-        const char* icalls[] = {
-            "UnityEngine.Camera::get_main",
-            "UnityEngine.Camera::WorldToScreenPoint_Vector3",
-            "UnityEngine.Camera::get_fieldOfView",
-            "UnityEngine.GameObject::Find",
-            "UnityEngine.GameObject::get_transform",
-            "UnityEngine.Transform::get_position",
-            "UnityEngine.Transform::get_rotation",
-            "UnityEngine.Component::get_gameObject",
-            "UnityEngine.GameObject::get_activeSelf",
-            "UnityEngine.Object::get_name",
-            "UnityEngine.Object::get_hideFlags",
-            nullptr
-        };
-        for (int i = 0; icalls[i]; i++) {
-            uintptr_t addr = IL2CPP::API::ResolveICall(icalls[i]);
-            if (addr) {
-                // resolved addresses would go into a map here
-            }
-        }
-        return true;
+    // ============================================================
+    // OFFSETS — YOU MUST UPDATE THESE FOR EACH GAME
+    // Change the hex values below based on your reverse engineering
+    // ============================================================
+    namespace Offsets {
+        // --- Player class offsets (from Player object) ---
+        inline uint32_t Health         = 0x68;   // <-- CHANGE THIS
+        inline uint32_t MaxHealth      = 0x6C;   // <-- CHANGE THIS
+        inline uint32_t Team           = 0x70;   // <-- CHANGE THIS
+        inline uint32_t IsAlive        = 0x74;   // <-- CHANGE THIS
+        inline uint32_t IsVisible      = 0x75;   // <-- CHANGE THIS
+        inline uint32_t PlayerName     = 0x78;   // <-- CHANGE THIS
+        inline uint32_t HeadPos        = 0x88;   // <-- CHANGE THIS
+
+        // --- GameObject/Transform offsets ---
+        inline uint32_t GameObjectToTransform = 0x10;  // <-- usually stays 0x10
+        inline uint32_t TransformPosition     = 0x38;  // <-- usually stays 0x38
+        inline uint32_t TransformRotation     = 0x44;  // <-- usually stays 0x44
+
+        // --- Camera offsets ---
+        inline uint32_t CameraViewMatrix  = 0x2C0;  // <-- CHANGE THIS
+        inline uint32_t CameraProjMatrix  = 0x300;  // <-- CHANGE THIS
+
+        // --- Tag / Layer filtering ---
+        inline int32_t PlayerLayer  = 8;    // <-- CHANGE THIS
+        inline int32_t PlayerTag    = 0;    // <-- CHANGE THIS
     }
-
-    inline Vector3 WorldToScreen(Vector3 worldPos, Matrix4x4 viewProj) {
-        Vector3 screen = viewProj.MultiplyPoint(worldPos);
-        screen.x = (screen.x + 1.0f) * 0.5f * Screen::g_nWidth;
-        screen.y = (1.0f - screen.y) * 0.5f * Screen::g_nHeight;
-        return screen;
-    }
-
-    inline bool GetViewMatrix(Matrix4x4& viewMatrix, Matrix4x4& projMatrix) {
-        return false;
-    }
-
-    struct PlayerEntity {
-        Il2CppObject* gameObject;
-        Il2CppObject* transform;
-        Vector3 position;
-        Vector3 screenPos;
-        Vector3 headScreenPos;
-        float distance;
-        bool isVisible;
-        bool isAlive;
-        bool isLocal;
-        int health;
-        int team;
-        char name[64];
-        float height;
-    };
-
-    class EntityManager {
-    private:
-        std::vector<PlayerEntity> m_entities;
-        Il2CppObject* m_localPlayer = nullptr;
-        Vector3 m_localPos;
-
-        bool FindEntities() {
-            m_entities.clear();
-            if (IL2CPP::API::ResolveICall) {
-                uintptr_t findObjsOfType = IL2CPP::API::ResolveICall(
-                    "UnityEngine.Object::FindObjectsOfType");
-            }
-            return !m_entities.empty();
-        }
-
-    public:
-        bool Update() {
-            return FindEntities();
-        }
-
-        const std::vector<PlayerEntity>& GetEntities() const {
-            return m_entities;
-        }
-
-        Vector3 GetLocalPosition() const { return m_localPos; }
-        Il2CppObject* GetLocalPlayer() const { return m_localPlayer; }
-    };
-}
